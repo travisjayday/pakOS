@@ -8,6 +8,7 @@
     #include "kernel.h"
     #include "virt-mm.h"
     #include "vga.h"
+    // #define DEBUG_MALLOC // enables serial logging
 #else
     #include <unistd.h>
     #include <stdio.h>

@@ -2,6 +2,8 @@
 #define VGA_H
 
 #include <stdint.h>
+#include "kstring.h"
+#include "serial.h"
 
 #define VGA_COLOR_BLACK         0
 #define VGA_COLOR_BLUE          1

@@ -44,20 +44,27 @@ void _kguard (status_t status);
  * Wrappers for outb and inb asm instructions.
  */
 static inline void 
-___outb(uint16_t port, uint8_t val)
-{
+___outb(uint16_t port, uint8_t val) {
     asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
 }
 
+static inline void 
+___outl(uint16_t port, uint32_t val) {
+    asm volatile ( "outl %0, %1" : : "a"(val), "Nd"(port) );
+}
+
 static inline uint8_t 
-___inb(uint16_t port)
-{
-    uint8_t ret;
-    asm volatile ( "inb %1, %0"
-                   : "=a"(ret)
-                   : "Nd"(port) );
+___inb(uint16_t port) {
+    uint8_t ret; asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
     return ret;
 }
+
+static inline uint32_t 
+___inl(uint16_t port) {
+    uint32_t ret; asm volatile ( "inl %1, %0" : "=a"(ret) : "Nd"(port) );
+    return ret;
+}
+
 
 /*
  * Keeps CPU busy for a little bit so that legacy port IO ops can complete.

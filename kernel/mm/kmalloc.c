@@ -49,11 +49,21 @@ __new_blockspace(struct _malloc_h* last, size_t size)
 {
     struct _malloc_h *block;
     size_t nbytes = size + sizeof(struct _malloc_h);
+    nbytes = (nbytes + 0x1000) & ~0xfff;
+
 #ifndef LINUX_MALLOC
     void* new_space_start = (void*) (_heap_start + _heap_size); 
     mmap(new_space_start, nbytes); 
     block = new_space_start;
     _heap_size += nbytes;
+#ifdef DEBUG_MALLOC
+    vga_print("* kmalloc: Expanding heap by ");
+    vga_puthex(nbytes);
+    vga_print(" ["); vga_puthex(_heap_start); vga_print(" - ");
+    vga_puthex(_heap_start + _heap_size); vga_print("]");
+    serial_print("\n\r");
+#endif
+
 #else
     block = sbrk(0);
     void* new_space_start = sbrk(nbytes);
@@ -73,7 +83,7 @@ __new_blockspace(struct _malloc_h* last, size_t size)
         block->prev_block = NULL;
     }
 
-    block->size         = size;
+    block->size         = nbytes - sizeof(struct _malloc_h);
     block->next_block   = NULL;
     block->free         = _MBLKFREE;
     block->magic        = 0xdeadbeef;
@@ -185,7 +195,9 @@ kfree(void* addr)
     struct _malloc_h* block = ((struct _malloc_h*) addr) - 1;
 
     if (!_mblk_valid(block)) {
-        vga_print("Invalid block!"); 
+        vga_print("Freeing invalid block:"); 
+        serial_print("* malloc: Tried freeing invalid block at ");
+        vga_puthex((uint32_t) addr);
 #ifdef LINUX_MALLOC
         char c = write(0, "Invalid Free", 12);
         (void) c;
@@ -252,8 +264,9 @@ init_kmalloc(uint32_t kheap_start, size_t kheap_size)
     // Result: All memory should be freed after each test
 #endif 
 
-    kmalloc(8000);
-    __dump_heap(0, 4);
+    void* a = kmalloc(11000);
+    kfree(a);
+    //__dump_heap(0, 4);
     //__dump_heap(0x1f60, 4);
 
     return STATUS_OK;

@@ -8,6 +8,8 @@
 #include "idt.h"
 #include "cpu_traps.h"
 #include "pic.h"
+#include "pci.h"
+#include "serial.h"
 
 __isr(keypress) {
     vga_clear();
@@ -16,8 +18,9 @@ __isr(keypress) {
 }
 
 void kernel_init(void) {
-    vga_clear();
-    vga_print("Booting OS2 written by tjz...\n\r");
+    _kguard(init_serial());     // Inits debug logging over serial port.
+
+    vga_clear(); vga_print("Booting OS2 written by tjz...\n\r");
 
     _kguard(init_phymm());      // Init physical page frame allocator.
     _kguard(init_virtmm());     // Init paging service and heap allocator. 
@@ -25,8 +28,8 @@ void kernel_init(void) {
     _kguard(init_idt());        // Init empty IDT.
     _kguard(init_cpu_traps());  // Register internal CPU fault handlers.
     _kguard(init_pic());        // Remap PIC and clear all IRQ lines. 
- 
-
+    _kguard(init_pci());        // Populate PIC devices. 
+    
     /* Enable Keyboard 
     idt_mapint(1 + 0x20, &keypress);
     pic_yesirq(1);*/
@@ -38,6 +41,8 @@ void kernel_init(void) {
     vga_print("\n\r");
 
     printk("Hello world 0x%x are here.\nNow it is %d", 0xdeadbeef, 123);
+
+    printk("Hellooowww %d", (uint32_t) 123);
 
     //__asm__("cli");
     KBREAK;

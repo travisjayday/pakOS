@@ -1,5 +1,6 @@
 #include "cpu_traps.h"
 
+void handle_pagefault(struct interrupt_frame* frame);
 
 __isr(fault_de)     { kpanic("Fault Division By Zero"); }
 __isr(fault_db)     { kpanic("Fault Debug"); }
@@ -14,7 +15,7 @@ __isr(fault_ts)     { kpanic("Invalid TSS"); }
 __isr(fault_np)     { kpanic("Segment Not Present"); }
 __isr(fault_ss)     { kpanic("Stack Segment Fault"); }
 __isr(fault_gp)     { kpanic("General Protection Fault"); } 
-__isr(fault_pf)     { kpanic("Page Fault"); }
+__isr(fault_pf)     { handle_pagefault(frame); }
 __isr(fault_mf)     { kpanic("x87 Floating-Point Exception"); }
 __isr(fault_ac)     { kpanic("Alignment Check"); }
 __isr(abort_mc)     { kpanic("Machine Check"); }
@@ -47,4 +48,24 @@ init_cpu_traps(void)
     idt_maptrap(30, &fault_sx);
 
     return STATUS_OK;
+}
+
+void 
+handle_pagefault(struct interrupt_frame* frame) 
+{
+    vga_clear();
+    vga_print("Encountered Bruh Momement: Page Fault\n\n\r");
+    if ((frame->error & 4)) vga_print("User process tried to");
+    else                    vga_print("Kernel process tried to");
+    if ((frame->error & 2)) vga_print(" write ");
+    else                    vga_print(" read ");
+    if ((frame->error & 1)) vga_print("a page and caused a protection fault"); 
+    else                    vga_print("a non-existent page entry");
+    vga_print(" at ");
+    uint32_t addr; 
+    asm volatile ( "mov %%cr2, %0"
+                   : "=a"(addr)
+                   : /* No inputs */);
+    vga_puthex(addr);
+    KBREAK;
 }

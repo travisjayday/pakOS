@@ -4,7 +4,7 @@ target=build/kernel.bin
 build=build/
 
 # These will be in the form of `./kernel/vga/vga.c ./kernel/mm/kmalloc.c ./kernel/mm/virt-mm.c'
-c-src=$(shell find ./kernel -name '*.c')
+c-src=$(shell find . -name '*.c')
 asm-src=$(shell find ./kernel/asm -name '*.s')
 
 # These will be in the form of `build/vga.o build/kernel.o build/phy-mm.o ...'

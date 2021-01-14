@@ -24,19 +24,42 @@ vga_clear(void)
 }
 
 void 
+vga_scrolldown(uint8_t by) 
+{
+    uint32_t w = VGA_WIDTH;
+    uint32_t h = VGA_HEIGHT;
+    void* new_start = (uint8_t*) VGA_BASE + w * by * 2;
+    size_t bufsize = (w * 2) * h;
+    memmove(VGA_BASE, new_start, bufsize - w * by * 2);
+}
+
+void 
 vga_putchar(char c)
 {
-    if (c == '\n') {
-        vga_cursor_r++; 
-    }
-    else if (c == '\r') {
-        vga_cursor_c = 0; 
-    }
-    else {
-        vga_set_char(vga_cursor_r, vga_cursor_c, c);
+    serial_putchar(c);
 
-        if (++vga_cursor_c == VGA_WIDTH) 
+    switch (c) {
+        case '\n':
+            vga_cursor_r++; 
+            break;
+        case '\r':
             vga_cursor_c = 0; 
+            break;
+        case '\t':
+            vga_cursor_c += 4;
+            break;
+        default:
+            vga_set_char(vga_cursor_r, vga_cursor_c++, c);
+            break;
+    }
+
+    if (vga_cursor_c >= VGA_WIDTH) {
+        vga_cursor_c = 0; 
+        vga_cursor_r++;
+    }
+    if (vga_cursor_r >= VGA_HEIGHT - 1) {
+        vga_scrolldown(1);
+        vga_cursor_r--;
     }
 }
 

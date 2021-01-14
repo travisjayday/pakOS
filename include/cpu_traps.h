@@ -5,7 +5,9 @@
 #include "vga.h"
 #include "idt.h"
 
-struct interrupt_frame;
+struct interrupt_frame {
+    uint8_t error;    
+};
 
 #define __isr(name) \
     __attribute__((interrupt)) void \
