@@ -31,6 +31,14 @@ void printk(const char *fmt, ...) {
                 bufidx += intstrlen;
                 kfree(intstr);
             }
+
+            // print string
+            if (fmt[i] == 's') {
+                char* s = va_arg(argptr, char*);
+                uint8_t slen = strlen(s) - 1;
+                memcpy(buffer + bufidx, s, slen);
+                bufidx += slen;
+            }
         }
         else if (fmt[i] == '\n') {
             buffer[bufidx++] = '\n';

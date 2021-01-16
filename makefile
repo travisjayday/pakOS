@@ -1,4 +1,4 @@
-cflags-obj=-std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -nostdlib -Iinclude -Iinclude/klibc -Wl,--build-id=none -no-pie -mno-80387 -mgeneral-regs-only 
+cflags-obj=-std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -nostdlib -Iinclude -Iinclude/klibc -Iinclude/driver -Wl,--build-id=none -no-pie -mno-80387 -mgeneral-regs-only 
 
 target=build/kernel.bin
 build=build/
@@ -22,8 +22,9 @@ run: kernel
 	echo $(c-src)
 	qemu-system-i386 -cdrom build/os2.iso -m 256
 
+
 debug: kernel
-	qemu-system-i386 -s -S -kernel $(target) -m 256
+	qemu-system-i386 -s -S -kernel $(target) -m 256 
 
 kernel: clean $(obj) 
 	i686-linux-gnu-gcc -T linker.ld -o $(target) $(cflags-obj) $(obj) 
@@ -34,6 +35,11 @@ kernel: clean $(obj)
 	cp $(target) build/iso/boot
 	grub-mkrescue -o build/os2.iso build/iso
 	# qemu-system-i386 -kernel $(target)
+
+target:  kernel
+	sudo mkdir -p /mnt/efi
+	sudo mount -a /dev/sdb1 /mnt/efi
+	sudo mv $(target) /mnt/efi/EFI
 
 build/%.o : %.c
 	i686-linux-gnu-gcc $< $(cflags-obj) -c -o $@

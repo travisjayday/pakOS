@@ -45,6 +45,13 @@ status_t mmap(void* addr, size_t length);
 status_t munmap(void* addr, size_t length);
 
 /* 
+ * Given an address to a memory mapped region in physical RAM, 
+ * map that region into logical kernel space and return a pointer
+ * to it.
+ */
+void* maphwdev(uint32_t hwaddr, size_t pages);
+
+/* 
  * Invalidates a single page by clearing MMU cache. Faster than resetting CR3.
  * Inline assembly for GCC (from Linux kernel source) OwO
  */

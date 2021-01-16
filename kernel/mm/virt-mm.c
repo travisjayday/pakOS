@@ -1,5 +1,8 @@
 #include "virt-mm.h"
 
+/* Points to where the next driver space allocation should  be made */
+uint8_t* __driver_space_head = NULL;
+
 /* Example / Explanation for myself -- Adress mapping
  *
  * 0xffc00000 maps to pde[1023], which holds a pointer to pde itself. 
@@ -111,6 +114,22 @@ munmap(void* addr, size_t length)
 
     // frees the underlying memory
     return hwpfree((void*) hwaddr, pages); 
+}
+
+void*
+maphwdev(uint32_t hwaddr, size_t pages)
+{
+    if (__driver_space_head == NULL) 
+        __driver_space_head = (uint8_t*) __driver_space_start;
+
+    uint8_t* lspace = __driver_space_head;    
+
+    __driver_space_head += pages;
+
+    for (size_t p = 0; p < pages; p++) 
+        mapfr((void*) (hwaddr + 4096 * p), (void*) (lspace + 4096 * p));
+
+    return lspace;
 }
 
 

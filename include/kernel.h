@@ -13,6 +13,8 @@
 #define STATUS_FAILED_INIT  0xFC
 #define STATUS_OUT_OF_MEM   0xFB
 #define STATUS_INVALID_FREE 0xFA
+#define STATUS_NO_DRIVER    0xF9
+#define STATUS_DRIVER_ERROR 0xF8
 
 #define DEBUG 5
 
@@ -35,8 +37,16 @@ static const uint32_t __kheap_start         = 0xd0000000;
 /* 
  * Kernel heap size constraints.
  */
-static const uint32_t __kheap_min_size      = 4096 * 1;      // intial size
-static const uint32_t __kheap_max_size      = 0x0fffffff;     // max size
+static const uint32_t __kheap_min_size     = 4096 * 1;      // intial size
+static const uint32_t __kheap_max_size     = 0x0fffffff;     // max size
+
+/*
+ * Logical address where hardware mapped devices (pci, mmio, etc) live
+ */
+static const uint32_t __driver_space_start = 0xe0000000;
+static const uint32_t __driver_space_size  = 0x0fffffff;
+
+
 
 void _kguard (status_t status);
 
@@ -64,7 +74,6 @@ ___inl(uint16_t port) {
     uint32_t ret; asm volatile ( "inl %1, %0" : "=a"(ret) : "Nd"(port) );
     return ret;
 }
-
 
 /*
  * Keeps CPU busy for a little bit so that legacy port IO ops can complete.

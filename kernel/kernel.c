@@ -29,12 +29,15 @@ void kernel_init(void) {
     _kguard(init_cpu_traps());  // Register internal CPU fault handlers.
     _kguard(init_pic());        // Remap PIC and clear all IRQ lines. 
     _kguard(init_pci());        // Populate PIC devices. 
+
     
     /* Enable Keyboard 
     idt_mapint(1 + 0x20, &keypress);
     pic_yesirq(1);*/
 
     __asm__("sti");             // Enable Interrupts.
+    
+    load_pci_drivers();
 
     vga_print("This is string");
     vga_print((char*) itoa(0xb23, 16));
@@ -42,7 +45,7 @@ void kernel_init(void) {
 
     printk("Hello world 0x%x are here.\nNow it is %d", 0xdeadbeef, 123);
 
-    printk("Hellooowww %d", (uint32_t) 123);
+    printk("Hellooowww %s jesus", "world");
 
     //__asm__("cli");
     KBREAK;
