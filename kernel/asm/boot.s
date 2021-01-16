@@ -152,7 +152,7 @@ fill_loop:
 pre_init_kernel: 
     mov     $stack_top, %esp        # setup stack pointer
 
-    mov     $0, pde_table + 0       # remove lower kernel mapping
+    movl    $0, pde_table + 0       # remove lower kernel mapping
     movl    %cr3, %ecx              # reload paging
     movl    %ecx, %cr3
 

@@ -25,6 +25,10 @@ struct tdesc* txtail;
 #define REG_TOTL            0x40c8      // Total octets transmitted (lower) 
 #define REG_TOTH            0x40cc      // Total octets transmitted (lower) 
 
+/* Diagnostics */
+#define REG_TDFT            0x3418      // transmit data fifo tail
+#define REG_TDFH            0x3410      // trasmit data fifo head  
+
 #define EEPROM_MAC          0x0         // MAC address is 6 bytes long
 #define EEPROM_VENDOR       0xE   
 
@@ -170,7 +174,8 @@ add_tx_buffer(uint64_t buffer_addr, uint16_t len, uint8_t eop)
 
     // overwrite the last dsecriptor with the current one
     struct tdesc* current = last;
-    current->buffer = _lpa(buffer_addr);  // physical address of buffer
+    current->buffer = 0;//buffer_addr;  // physical address of buffer
+    (void) buffer_addr;
     current->length = len;          // length of buffer
     current->cso    = 0;            // checksum offset 0 (not used)
 
@@ -262,18 +267,22 @@ load_driver_eth_intel_8254x(struct gpci_dev* pcidev)
     struct ip_addr ip_target;
     ip_target.bytes = 0x123456;
 
+    printk("PHY head: %x, PHY  tail: %x\n", rreg(REG_TDFH), rreg(REG_TDFT));
+
     netd_send_ipv4_arp_packet(mac, ip, &mac_target, &ip_target, ARP_OP_REQ);
 
     // set trasmist descriptor base
+    printk("txqueue: %x", txqueue);
+    //KBREAK;
     uintptr_t tdaddr = _lpa(txqueue);
     if ((tdaddr & 0x7) != 0) {
         kpanic(itoa(tdaddr, 16));
     }
     wreg(REG_TDBAL, tdaddr);
-    wreg(REG_TDBAH, 0x0);
+    wreg(REG_TDBAH, 0);
     wreg(REG_TDLEN, txqueue_n * 2);
     wreg(REG_TDH, 0x0);
-    wreg(REG_TDT, txtail - txqueue);
+    wreg(REG_TDT, 0x0);
 
     printk("Tail sis at %d", rreg(REG_TDT));
     
@@ -285,10 +294,16 @@ load_driver_eth_intel_8254x(struct gpci_dev* pcidev)
 
     for (int i = 0; i < 100; i++) printk("");
 
+    wreg(REG_TDT, txtail - txqueue);
+
+    for (int i = 0; i < 100; i++) printk("");
+
     printk("Head sis at %d", rreg(REG_TDH));
     printk("staus %lx %lx\n", *((uint64_t*) txqueue), *((uint64_t*) txqueue + 1));
     printk("Transmitted; %d\n", rreg(REG_TOTL));
     printk("Failed; %d\n", rreg(REG_TSCTFC));
+
+    printk("PHY head: %x, PHY  tail: %x\n", rreg(REG_TDFH), rreg(REG_TDFT));
     
     return STATUS_OK;
 }
