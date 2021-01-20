@@ -10,12 +10,15 @@
 #include "pic.h"
 #include "pci.h"
 #include "serial.h"
+#include "netdev.h"
 
 __isr(keypress) {
     vga_clear();
     vga_print("Pressed a key!");
     KBREAK;
 }
+
+extern struct netdev* netcard1;
 
 void kernel_init(void) {
     _kguard(init_serial());     // Inits debug logging over serial port.
@@ -43,9 +46,18 @@ void kernel_init(void) {
     vga_print((char*) itoa(0xb23, 16));
     vga_print("\n\r");
 
-    printk("Hello world 0x%x are here.\nNow it is %d", 0xdeadbeef, 123);
+    struct mac_addr mac_target; 
+    mac_target.bytes = 0;
 
-    printk("Hellooowww %s jesus", "world");
+    struct ip_addr ip_target;
+    ip_target.bytes = 0x123456;
+
+    printk("Loaded netcard with MAC: %s", netcard1->mac_addr->str);
+    netd_send_ipv4_arp_packet(netcard1, &mac_target, &ip_target, ARP_OP_REQ);
+    netd_send_ipv4_arp_packet(netcard1, &mac_target, &ip_target, ARP_OP_REQ);
+    netd_send_ipv4_arp_packet(netcard1, &mac_target, &ip_target, ARP_OP_REQ);
+
+    printk("\nEnd of kernel");
 
     //__asm__("cli");
     KBREAK;

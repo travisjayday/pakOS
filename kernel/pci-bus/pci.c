@@ -2,6 +2,7 @@
 
 struct gpci_dev** gpci_devs; 
 uint32_t gpci_devs_n = 0;
+struct netdev* netcard1; 
 
 /* 
  * Internal function declarations - Used only in pci.c 
@@ -139,6 +140,26 @@ pci_enumerate_devs(void)
     }
 }
 
+void
+pci_enable_bus_mastering(struct gpci_dev* pcidev)
+{
+    // read command register
+    uint32_t cmd = pci_cfg_rdword(pcidev, 0x4);
+
+    // enable bus mastering
+    cmd |= (1 << 2);
+
+    // write comand register
+    pci_cfg_wdword(pcidev, 0x4, cmd);
+
+
+    uint32_t cmd_check = pci_cfg_rdword(pcidev, 0x4);
+
+    if (!(cmd_check & (1 << 2))) {
+        kpanic("Failed to enable bus mastering on PCI device"); 
+    }
+}
+
 status_t
 init_pci(void)
 {
@@ -197,7 +218,8 @@ load_intel_devdrv(struct gpci_dev* dev)
         case 0x1027: case 0x1028: case 0x1107: case 0x1112:
         case 0x1013: case 0x1018: case 0x1076: case 0x1077:
         case 0x1078: case 0x1017: case 0x1016: case 0x100E: 
-            status = load_driver_eth_intel_8254x(dev);
+            netcard1 = (struct netdev*) kmalloc(sizeof(struct netdev));
+            status = load_driver_eth_intel_8254x(dev, &netcard1);
             break;
         default:
             status = STATUS_NO_DRIVER;

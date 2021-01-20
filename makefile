@@ -1,5 +1,7 @@
 cflags-obj=-std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -nostdlib -Iinclude -Iinclude/klibc -Iinclude/driver -Wl,--build-id=none -no-pie -mno-80387 -mgeneral-regs-only 
 
+qemu=/home/tjz/software/qemu/build/./qemu-system-i386  
+qemu=sudo qemu-system-i386
 target=build/kernel.bin
 build=build/
 
@@ -20,11 +22,11 @@ vpath %.s $(dir $(asm-src))
 
 run: kernel
 	echo $(c-src)
-	qemu-system-i386 -cdrom build/os2.iso -m 256
+	$(qemu) -cdrom build/os2.iso -m 256 -netdev tap,id=n1 -device e1000,netdev=n1 -object filter-dump,id=id,netdev=n1,file=./build/dump.pcap 
 
 
 debug: kernel
-	qemu-system-i386 -s -S -kernel $(target) -m 256 
+	$(qemu) -s -S -kernel $(target) -m 256 
 
 kernel: clean $(obj) 
 	i686-linux-gnu-gcc -T linker.ld -o $(target) $(cflags-obj) $(obj) 
@@ -35,6 +37,9 @@ kernel: clean $(obj)
 	cp $(target) build/iso/boot
 	grub-mkrescue -o build/os2.iso build/iso
 	# qemu-system-i386 -kernel $(target)
+
+linux: 
+	$(qemu) -cdrom /home/tjz/Downloads/Core-current.iso
 
 target:  kernel
 	sudo mkdir -p /mnt/efi

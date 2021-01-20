@@ -15,11 +15,13 @@
  * mapfr and umapfr do this step by step, but here's a macro for convenience 
  */
 
-#define _lpa(lgaddr)                                        \
-    *((uint32_t*)                                           \
-            (__logical_pde_base | (((uint32_t) lgaddr >> 22) << 12))   \
-            + (((uint32_t) lgaddr >> 12) & 0x3ff)                      \
-     ) & ~0x3ff
+#define _lpa(lgaddr)                                                    \
+     (                                                                  \
+     *((uint32_t*)                                                      \
+            (__logical_pde_base | (((uint32_t) lgaddr >> 22) << 12))    \
+            + (((uint32_t) lgaddr >> 12) & 0x3ff)                       \
+     ) & ~0x3ff                                                         \
+     ) + (((uint32_t) lgaddr) & 0x3ff)
 
 
 /* Logical address of PDE table. PDE table lives in higher kernel space

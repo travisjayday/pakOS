@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "vga.h"
+#include "devices.h"
 
 #define status_t uint8_t
 #define STATUS_OK           0
